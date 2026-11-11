@@ -1,0 +1,264 @@
+﻿@model IEnumerable<CodexaManagement.Model.Entities.Employee>
+
+@{
+    ViewData["Title"] = "Employee Management";
+
+    var employees = Model?.ToList()
+        ?? new List<CodexaManagement.Model.Entities.Employee>();
+}
+
+<div class="container-fluid py-4">
+
+    @* Page Header *@
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">Employee Management</h2>
+            <p class="text-muted mb-0">
+                Manage employee information and records.
+            </p>
+        </div>
+
+        @* Create Account Button - Top Right *@
+        <a asp-controller="Account"
+           asp-action="Create"
+           class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>
+            Create Account
+        </a>
+
+    </div>
+
+    @* Success Message *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+    @* Employee Summary *@
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="rounded-3 bg-primary-subtle text-primary p-3">
+                    <i class="bi bi-people-fill fs-3"></i>
+                </div>
+
+                <div>
+                    <div class="text-muted small">Total Employees</div>
+                    <h3 class="fw-bold mb-0">@employees.Count</h3>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    @* Employee Table *@
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white border-0 px-4 pt-4 pb-3">
+            <h5 class="fw-semibold mb-1">Employee Directory</h5>
+
+            <p class="text-muted small mb-0">
+                View and manage employee records.
+            </p>
+        </div>
+
+        <div class="card-body p-0">
+
+            @if (employees.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3">Employee</th>
+                                <th class="py-3">Contact</th>
+                                <th class="py-3">Department</th>
+                                <th class="py-3">Location</th>
+                                <th class="py-3 text-end">Salary</th>
+                                <th class="py-3 text-center">Status</th>
+                                <th class="py-3 text-center">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var employee in employees)
+                            {
+                                <tr>
+
+                                    @* Employee Details *@
+                                    <td class="px-4 py-3">
+                                        <div class="fw-semibold">
+                                            @employee.FirstName @employee.LastName
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            Employee #@employee.Id
+                                        </div>
+                                    </td>
+
+                                    @* Contact Information *@
+                                    <td class="py-3">
+                                        <div>@employee.Email</div>
+
+                                        <div class="text-muted small">
+                                            @employee.Phone
+                                        </div>
+                                    </td>
+
+                                    @* Department *@
+                                    <td class="py-3">
+                                        @if (!string.IsNullOrWhiteSpace(employee.Department))
+                                        {
+                                            <span class="badge bg-light text-dark border">
+                                                @employee.Department
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Not assigned
+                                            </span>
+                                        }
+                                    </td>
+
+                                    @* Location *@
+                                    <td class="py-3">
+                                        @(string.IsNullOrWhiteSpace(employee.Location)
+                                            ? "Not specified"
+                                            : employee.Location)
+                                    </td>
+
+                                    @* Salary *@
+                                    <td class="py-3 text-end text-nowrap">
+                                        @(employee.Salary?.ToString("N2") ?? "Not set")
+                                    </td>
+
+                                    @* Employee Status *@
+                                    <td class="py-3 text-center">
+                                        @if (employee.EmpIsActive)
+                                        {
+                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+
+                                    @* Action Buttons *@
+                                    <td class="py-3 text-center">
+                                        <div class="d-inline-flex flex-wrap justify-content-center gap-1">
+
+                                            @* View Details *@
+                                            <a asp-controller="Employee"
+                                               asp-action="GetById"
+                                               asp-route-id="@employee.Id"
+                                               class="btn btn-info btn-sm">
+                                                <i class="bi bi-eye me-1"></i>
+                                                View
+                                            </a>
+
+                                            @* Update Salary / Edit Employee *@
+                                            <a asp-controller="Employee"
+                                               asp-action="Edit"
+                                               asp-route-id="@employee.Id"
+                                               class="btn btn-primary btn-sm">
+                                                <i class="bi bi-pencil-square me-1"></i>
+                                                Edit
+                                            </a>
+
+                                            @* Delete Employee *@
+                                            <a asp-controller="Employee"
+                                               asp-action="Delete"
+                                               asp-route-id="@employee.Id"
+                                               class="btn btn-outline-danger btn-sm"
+                                               title="Delete employee"
+                                               aria-label="Delete employee">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+            else
+            {
+                @* Empty State *@
+                <div class="text-center py-5 px-3">
+
+                    <i class="bi bi-people display-4 text-muted"></i>
+
+                    <h5 class="fw-semibold mt-3">
+                        No employees found
+                    </h5>
+
+                    <p class="text-muted mb-4">
+                        Get started by creating your first employee record.
+                    </p>
+
+                    <a asp-controller="Account"
+                       asp-action="Create"
+                       class="btn btn-primary">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Create First Account
+                    </a>
+
+                </div>
+            }
+
+        </div>
+
+        @* Table Footer *@
+        <div class="card-footer bg-white border-0 px-4 py-3">
+            <span class="text-muted small">
+                Showing @employees.Count employee(s)
+            </span>
+        </div>
+
+    </div>
+
+</div>
+
+    @section Scripts {
+    <script>
+        @if (TempData["Success"] != null)
+        {
+            <text>
+                Swal.fire({
+                    title: "Deleted!",
+                    text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Success"])),
+                    icon: "success",
+                    confirmButtonText: "OK"
+                });
+            </text>
+        }
+    </script>
+}

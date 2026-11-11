@@ -1,0 +1,138 @@
+@model IEnumerable<CodexaManagement.Model.Entities.Project>
+
+@{
+    ViewData["Title"] = "Project Management";
+    var projects = Model?.ToList()
+        ?? new List<CodexaManagement.Model.Entities.Project>();
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Project Management</h2>
+            <p class="text-muted mb-0">
+                View and manage active projects.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Create Project
+        </a>
+    </div>
+
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-primary-subtle text-primary p-3">
+                    <i class="bi bi-kanban fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Active Projects</div>
+                    <h3 class="fw-bold mb-0">@projects.Count</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 px-4 pt-4 pb-3">
+            <h5 class="fw-semibold mb-1">Project Directory</h5>
+            <p class="text-muted small mb-0">
+                Review project timelines and current status.
+            </p>
+        </div>
+
+        <div class="card-body p-0">
+            @if (projects.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3">Project</th>
+                                <th class="py-3">Description</th>
+                                <th class="py-3">Start date</th>
+                                <th class="py-3">End date</th>
+                                <th class="py-3 text-center">Status</th>
+                                <th class="py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var project in projects)
+                            {
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <div class="fw-semibold">@project.ProjectName</div>
+                                        <div class="text-muted small">Project #@project.Id</div>
+                                    </td>
+                                    <td class="py-3">
+                                        @if (string.IsNullOrWhiteSpace(project.Description))
+                                        {
+                                            <span class="text-muted">No description</span>
+                                        }
+                                        else
+                                        {
+                                            @project.Description
+                                        }
+                                    </td>
+                                    <td class="py-3 text-nowrap">
+                                        @project.StartDate.ToString("dd MMM yyyy")
+                                    </td>
+                                    <td class="py-3 text-nowrap">
+                                        @(project.EndDate?.ToString("dd MMM yyyy") ?? "Not set")
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        @if (project.IsActive)
+                                        {
+                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                                                Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-3 text-end text-nowrap">
+                                        <a asp-action="Details" asp-route-id="@project.Id"
+                                           class="btn btn-sm btn-outline-secondary" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@project.Id"
+                                           class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@project.Id"
+                                           class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5 px-4">
+                    <i class="bi bi-kanban fs-1 d-block mb-3"></i>
+                    <h5 class="fw-semibold">No projects found</h5>
+                    <p class="mb-0">There are no active projects to display.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

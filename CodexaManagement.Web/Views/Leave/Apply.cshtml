@@ -1,0 +1,250 @@
+@model CodexaManagement.Web.Models.ApplyLeaveViewModel
+
+@{
+    ViewData["Title"] = "Apply for Leave";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Apply for Leave</h2>
+        <p class="text-muted mb-0">Your request will be sent to HR for review.</p>
+    </div>
+    <a asp-action="MyRequests" class="btn btn-outline-secondary">My requests</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <form asp-action="Apply" method="post" enctype="multipart/form-data">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+
+                <!-- Leave type -->
+                <div class="col-md-6">
+                    <label asp-for="LeaveType" class="form-label"></label>
+                    <select asp-for="LeaveType" class="form-select">
+                        <option value="">Choose leave type</option>
+                        <option>Maternity</option>
+                        <option>Sick</option>
+                        <option>Casual</option>
+                        <option>LOP</option>
+                    </select>
+                    <span asp-validation-for="LeaveType" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6"></div>
+
+                <!-- From date -->
+                <div class="col-md-6">
+                    <label asp-for="StartDate" class="form-label">From Date</label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <!-- To date -->
+                <div class="col-md-6">
+                    <label asp-for="EndDate" class="form-label">To Date</label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <div id="date-hint" class="form-text"></div>
+                </div>
+
+                <!-- Reason -->
+                <div class="col-12">
+                    <label asp-for="Reason" class="form-label"></label>
+                    <textarea asp-for="Reason" class="form-control"
+                              rows="4" maxlength="1000"
+                              placeholder="Add a short explanation"></textarea>
+                    <span asp-validation-for="Reason" class="text-danger"></span>
+                </div>
+
+                <!-- Proof document -->
+                <div class="col-12">
+                    <label asp-for="ProofDocument" class="form-label"></label>
+                    <input asp-for="ProofDocument" type="file"
+                           class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png" />
+
+                    <div id="proof-hint" class="form-text">
+                        Proof is required for more than 2 working days.
+                        PDF, JPG, or PNG; maximum 5 MB.
+                    </div>
+
+                    <span asp-validation-for="ProofDocument" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 d-flex gap-2 pt-2">
+                    <button type="submit" class="btn btn-primary">Submit request</button>
+                    <a asp-action="MyRequests" class="btn btn-light">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const leaveType = document.getElementById("LeaveType");
+            const start = document.getElementById("StartDate");
+            const end = document.getElementById("EndDate");
+            const proofInput = document.getElementById("ProofDocument");
+            const proofHint = document.getElementById("proof-hint");
+            const dateHint = document.getElementById("date-hint");
+
+            const proofText = "PDF, JPG, or PNG; maximum 5 MB.";
+
+            // Today's date from the server (yyyy-MM-dd)
+            const today = '@(DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))';
+
+            const formatDate = (date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, "0");
+                const d = String(date.getDate()).padStart(2, "0");
+                return `${y}-${m}-${d}`;
+            };
+
+            // 7 days before and after today
+            const todayDate = new Date(today + "T00:00:00");
+            const minus7 = new Date(todayDate);
+            minus7.setDate(minus7.getDate() - 7);
+            const plus7 = new Date(todayDate);
+            plus7.setDate(plus7.getDate() + 7);
+
+            // Allowed range for the selected leave type
+            let limits = { min: "", max: "" };
+
+            // A non-nullable DateTime renders 0001-01-01 on first load. Clear it.
+            [start, end].forEach(el => {
+                if (el.value && el.value.startsWith("0001")) {
+                    el.value = "";
+                }
+            });
+
+            // To date can never be earlier than the allowed minimum or the From date
+            const syncEndMinimum = () => {
+                let floor = limits.min;
+
+                if (start.value && (!floor || start.value > floor)) {
+                    floor = start.value;
+                }
+
+                if (floor) {
+                    end.min = floor;
+                } else {
+                    end.removeAttribute("min");
+                }
+            };
+
+            // Remove dates that no longer fit the allowed range
+            const clearInvalidValues = () => {
+                const outOfRange = (value) =>
+                    value &&
+                    ((limits.min && value < limits.min) ||
+                     (limits.max && value > limits.max));
+
+                if (outOfRange(start.value)) {
+                    start.value = "";
+                }
+
+                syncEndMinimum();
+
+                if (outOfRange(end.value) ||
+                    (start.value && end.value && end.value < start.value)) {
+                    end.value = "";
+                }
+            };
+
+            const setLimits = (min, max) => {
+                limits = { min, max };
+
+                [start, end].forEach(el => {
+                    if (min) el.min = min; else el.removeAttribute("min");
+                    if (max) el.max = max; else el.removeAttribute("max");
+                });
+
+                clearInvalidValues();
+            };
+
+            const updateDateLimits = () => {
+                const type = leaveType.value;
+
+                if (type === "Sick") {
+                    // Past dates and today only
+                    setLimits("", today);
+                    dateHint.textContent =
+                        "Sick leave: you can select past dates and today. Future dates are not allowed.";
+                }
+                else if (["Maternity", "Casual", "LOP"].includes(type)) {
+                    // 7 days before and after today
+                    const minimum = formatDate(minus7);
+                    const maximum = formatDate(plus7);
+
+                    setLimits(minimum, maximum);
+                    dateHint.textContent =
+                        `Select dates between ${minimum} and ${maximum}.`;
+                }
+                else {
+                    setLimits("", "");
+                    dateHint.textContent =
+                        "Choose a leave type to see the allowed date range.";
+                }
+            };
+
+            // Proof is required for more than 2 working days (Mon-Fri)
+            const refreshProofRequirement = () => {
+                if (!start.value || !end.value || end.value < start.value) {
+                    proofInput.required = false;
+                    proofHint.textContent =
+                        `Proof is required for more than 2 working days. ${proofText}`;
+                    return;
+                }
+
+                const from = new Date(start.value + "T00:00:00");
+                const to = new Date(end.value + "T00:00:00");
+
+                let days = 0;
+
+                for (const day = new Date(from); day <= to; day.setDate(day.getDate() + 1)) {
+                    if (day.getDay() !== 0 && day.getDay() !== 6) {
+                        days++;
+                    }
+                }
+
+                proofInput.required = days > 2;
+
+                proofHint.textContent = days > 2
+                    ? `Proof is required for this ${days}-working-day request. ${proofText}`
+                    : `Proof is optional for requests of 2 working days or fewer. ${proofText}`;
+            };
+
+            // Events
+            leaveType.addEventListener("change", () => {
+                updateDateLimits();
+                refreshProofRequirement();
+            });
+
+            start.addEventListener("change", () => {
+                syncEndMinimum();
+
+                if (start.value && end.value && end.value < start.value) {
+                    end.value = "";
+                }
+
+                refreshProofRequirement();
+            });
+
+            end.addEventListener("change", refreshProofRequirement);
+
+            // Initial setup
+            updateDateLimits();
+            refreshProofRequirement();
+        })();
+    </script>
+}

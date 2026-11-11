@@ -1,0 +1,100 @@
+﻿
+@model CodexaManagement.Model.Entities.Employee
+
+@{
+    ViewData["Title"] = "Employee Details";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Employee Details</h2>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Home
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Employee Information</h5>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Employee ID</dt>
+                <dd class="col-sm-8">@Model.Id</dd>
+
+                <dt class="col-sm-4">First Name</dt>
+                <dd class="col-sm-8">@Model.FirstName</dd>
+
+                <dt class="col-sm-4">Last Name</dt>
+                <dd class="col-sm-8">@Model.LastName</dd>
+
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">@Model.Email</dd>
+
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8">
+                    @(string.IsNullOrWhiteSpace(Model.Phone)
+                        ? "Not provided"
+                        : Model.Phone)
+                </dd>
+
+                <dt class="col-sm-4">Department</dt>
+                <dd class="col-sm-8">
+                    @(string.IsNullOrWhiteSpace(Model.Department)
+                        ? "Not assigned"
+                        : Model.Department)
+                </dd>
+
+                <dt class="col-sm-4">Location</dt>
+                <dd class="col-sm-8">@Model.Location</dd>
+
+                <dt class="col-sm-4">Date of Birth</dt>
+                <dd class="col-sm-8">
+                    @(Model.DOB.HasValue
+                        ? Model.DOB.Value.ToString("dd MMM yyyy")
+                        : "Not provided")
+                </dd>
+
+                <dt class="col-sm-4">Gender</dt>
+                <dd class="col-sm-8">
+                    @(Model.Gender?.ToString() ?? "Not provided")
+                </dd>
+
+                <dt class="col-sm-4">Salary</dt>
+                <dd class="col-sm-8">
+                    @(Model.Salary.HasValue
+                        ? Model.Salary.Value.ToString("N2")
+                        : "Not assigned")
+                </dd>
+
+                <dt class="col-sm-4">Created Time</dt>
+                <dd class="col-sm-8">
+                    @Model.CreatedTime.ToString("dd MMM yyyy HH:mm")
+                </dd>
+
+                <dt class="col-sm-4">Last Updated</dt>
+                <dd class="col-sm-8">
+                    @(Model.UpdatedTime.HasValue
+                        ? Model.UpdatedTime.Value.ToString("dd MMM yyyy HH:mm")
+                        : "Never")
+                </dd>
+
+                <dt class="col-sm-4">Status</dt>
+                <dd class="col-sm-8">
+                    @if (Model.EmpIsActive && !Model.EmpIsDeleted)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inactive</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div>

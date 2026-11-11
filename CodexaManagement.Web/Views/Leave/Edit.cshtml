@@ -1,0 +1,169 @@
+﻿
+@model CodexaManagement.Web.Models.EditLeaveViewModel
+
+@{
+    ViewData["Title"] = "Edit Leave Request";
+}
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Edit Leave Request</h4>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Edit"
+                  asp-controller="Leave"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="Id" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <!-- Leave Type -->
+                <div class="mb-3">
+                    <label asp-for="LeaveType"
+                           class="form-label"></label>
+
+                    <select asp-for="LeaveType"
+                            class="form-select">
+
+                        <option value="">-- Select Leave Type --</option>
+                        <option value="Maternity">Maternity Leave</option>
+                        <option value="Sick">Sick Leave</option>
+                        <option value="Casual">Casual Leave</option>
+                        <option value="LOP">LOP Leave</option>
+
+                    </select>
+
+                    <span asp-validation-for="LeaveType"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Start Date -->
+                <div class="mb-3">
+                    <label asp-for="StartDate"
+                           class="form-label"></label>
+
+                    <input asp-for="StartDate"
+                           type="date"
+                           class="form-control" />
+
+                    <span asp-validation-for="StartDate"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- End Date -->
+                <div class="mb-3">
+                    <label asp-for="EndDate"
+                           class="form-label"></label>
+
+                    <input asp-for="EndDate"
+                           type="date"
+                           class="form-control" />
+
+                    <span asp-validation-for="EndDate"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Reason -->
+                <div class="mb-3">
+                    <label asp-for="Reason"
+                           class="form-label"></label>
+
+                    <textarea asp-for="Reason"
+                              class="form-control"
+                              rows="4"
+                              maxlength="1000"></textarea>
+
+                    <span asp-validation-for="Reason"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Existing Proof -->
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Existing Proof Document
+                    </label>
+
+                    @if (!string.IsNullOrEmpty(Model.ExistingProofFileName))
+                    {
+                        <div class="mb-2">
+                            <a asp-controller="Leave"
+   asp-action="Proof"
+   asp-route-id="@Model.Id"
+   target="_blank"
+   rel="noopener noreferrer">
+    View Existing Proof
+</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">
+                            No proof document uploaded.
+                        </p>
+                    }
+
+                </div>
+
+                <!-- Replacement Proof -->
+                <div class="mb-3">
+
+                    <label asp-for="ProofDocument"
+                           class="form-label">
+                        Upload Replacement Proof (Optional)
+                    </label>
+
+                    <input asp-for="ProofDocument"
+                           type="file"
+                           class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png" />
+
+                    <div class="form-text">
+                        Leave this empty to retain the existing document.
+                        Maximum file size: 5 MB.
+                    </div>
+
+                    <span asp-validation-for="ProofDocument"
+                          class="text-danger"></span>
+
+                </div>
+
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        <i class="bi bi-save"></i>
+                        Save Changes
+
+                    </button>
+
+                    <a asp-action="Index"
+                       asp-controller="Leave"
+                       class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

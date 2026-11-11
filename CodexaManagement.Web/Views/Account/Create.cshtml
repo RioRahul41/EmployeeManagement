@@ -1,0 +1,265 @@
+﻿@using CodexaManagement.Model.Enum
+@model CodexaManagement.Core.DTO.Account.RoleCreateview
+
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="container mt-4">
+
+    @* Success Message *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+    @* Temporary Password - Local Testing *@
+    @if (TempData["TemporaryPassword"] != null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>Temporary Password:</strong>
+            <code>@TempData["TemporaryPassword"]</code>
+        </div>
+    }
+
+    @* Create User Card *@
+    <div class="card shadow-sm mx-auto mt-4"
+         style="max-width: 600px; border: none; border-radius: 12px;">
+
+        <div class="card-body p-4 p-md-5">
+
+            @* Header *@
+            <div class="mb-4">
+                <h2 class="fw-bold text-dark mb-1">
+                    Create User Account
+                </h2>
+
+                <p class="text-muted small">
+                    Fill in the details below to provision a new user or HR account.
+                </p>
+            </div>
+
+            @* Validation Summary *@
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"
+                 role="alert">
+            </div>
+
+            @* Create User Form *@
+            <form asp-controller="Account"
+                  asp-action="Create"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+
+                    @* First Name *@
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FirstName"
+                               class="form-label fw-semibold text-secondary small">
+                            First Name
+                        </label>
+
+                        <input asp-for="FirstName"
+                               class="form-control"
+                               placeholder="Enter first name" />
+
+                        <span asp-validation-for="FirstName"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                    @* Last Name *@
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="LastName"
+                               class="form-label fw-semibold text-secondary small">
+                            Last Name
+                        </label>
+
+                        <input asp-for="LastName"
+                               class="form-control"
+                               placeholder="Enter last name" />
+
+                        <span asp-validation-for="LastName"
+                              class="text-danger small">
+                        </span>
+                    </div>
+
+                </div>
+
+                @* Email *@
+                <div class="mb-3">
+                    <label asp-for="Email"
+                           class="form-label fw-semibold text-secondary small">
+                        Email Address
+                    </label>
+
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control"
+                           placeholder="name@company.com" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                @* Location *@
+                <div class="mb-3">
+                    <label asp-for="Location"
+                           class="form-label fw-semibold text-secondary small">
+                        Location
+                    </label>
+
+                    <input asp-for="Location"
+                           type="text"
+                           class="form-control"
+                           placeholder="Enter location" />
+
+                    <span asp-validation-for="Location"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+                @* Role Selection *@
+                <div class="mb-3">
+                    <label asp-for="Role"
+                           class="form-label fw-semibold text-secondary small">
+                        Select Role
+                    </label>
+
+                    <select asp-for="Role" class="form-select">
+                        <option value="">-- Select Role --</option>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <option value="HR">HR</option>
+                            <option value="Manager">Manager</option>
+                            <option value="User">User</option>
+                        }
+                        else if (User.IsInRole("HR") || User.IsInRole("Manager"))
+                        {
+                            <option value="User">User</option>
+                        }
+                    </select>
+
+                    <span asp-validation-for="Role"
+                          class="text-danger small">
+                    </span>
+                </div>
+
+<!-- Department dropdown -->
+<!-- Department dropdown -->
+<div class="mb-3">
+    <label asp-for="Department" class="form-label">Department</label>
+    <select asp-for="Department"
+            asp-items="Html.GetEnumSelectList<DepartmentEnum>()"
+            id="Department"
+            class="form-select">
+        <option value="">-- Select Department --</option>
+    </select>
+    <span asp-validation-for="Department" class="text-danger"></span>
+</div>
+
+<!-- Designation dropdown -->
+<div class="mb-3">
+    <label asp-for="Designation" class="form-label">Designation</label>
+    <select asp-for="Designation"
+            id="Designation"
+            class="form-select">
+        <option value="">-- Select Designation --</option>
+    </select>
+    <span asp-validation-for="Designation" class="text-danger"></span>
+</div>
+                @* Action Buttons *@
+                <div class="d-flex align-items-center justify-content-end
+                    gap-2 pt-3 border-top">
+
+                    <a asp-controller="Account"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-dark px-4">
+                        Create Account
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    const designationsByDepartment = {
+        "IT": [
+            ".NET Developer",
+            "Python Developer",
+            "Java Developer",
+            "Frontend Developer",
+            "QA Tester",
+            "DevOps Engineer"
+        ],
+        "HR": [
+            "HR Executive",
+            "HR Manager",
+            "Recruiter",
+            "Talent Acquisition Specialist"
+        ],
+        "Finance": [
+            "Accountant",
+            "Financial Analyst",
+            "Finance Manager",
+            "Auditor"
+        ],
+        "Sales": [
+            "Sales Executive",
+            "Sales Manager",
+            "Business Development Executive"
+        ]
+    };
+
+    const departmentSelect = document.getElementById("Department");
+    const designationSelect = document.getElementById("Designation");
+
+    function updateDesignations() {
+        const department =
+            departmentSelect.options[departmentSelect.selectedIndex]?.text;
+
+        const designations = designationsByDepartment[department] || [];
+
+        designationSelect.innerHTML =
+            '<option value="">-- Select Designation --</option>';
+
+        designations.forEach(function (designation) {
+            const option = document.createElement("option");
+            option.value = designation;
+            option.textContent = designation;
+            designationSelect.appendChild(option);
+        });
+    }
+
+    departmentSelect.addEventListener("change", updateDesignations);
+
+    // Populate options when the page first loads.
+    updateDesignations();
+</script>
+}

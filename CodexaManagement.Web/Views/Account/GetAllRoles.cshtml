@@ -1,0 +1,28 @@
+﻿
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+
+@{
+    ViewData["Title"] = "All Roles";
+    int count = 1;
+}
+
+<h2>All Roles</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>S.NO</th>
+            <th>Role Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model)
+        {
+            <tr>
+                <td>@count</td>
+                <td>@role.Name</td>
+            </tr>
+            count++;
+        }
+    </tbody>
+</table>

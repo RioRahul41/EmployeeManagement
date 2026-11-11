@@ -1,0 +1,431 @@
+﻿@{
+    // ---------- Current route ----------
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool IsActive(string ctrl, params string[] actions) =>
+        controller.Equals(ctrl, StringComparison.OrdinalIgnoreCase) &&
+        (actions.Length == 0 ||
+         actions.Any(a => a.Equals(action, StringComparison.OrdinalIgnoreCase)));
+
+    // ---------- Roles ----------
+    bool isAdmin = User.IsInRole("Admin");
+    bool isHR = User.IsInRole("HR");
+    bool isUser = User.IsInRole("User");
+    bool isManager = User.IsInRole("Manager");
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    // ---------- Active state per link ----------
+    bool dashboardActive = IsActive("Home");
+
+    // Leave management (HR / Admin)
+    bool leaveRequestsActive = IsActive("Leave", "Index", "Review");
+
+    // Employee management dropdown
+    bool manageEmployeesActive = IsActive("Employee") && !IsActive("Employee", "MyInfo");
+    bool employeeMenuOpen = manageEmployeesActive;
+
+    // Project management
+    bool projectManagementActive = IsActive("Project");
+
+    // Admin: users dropdown (add more action names here if you have them)
+    bool createUserActive = IsActive("Account", "Create");
+    bool allUsersActive = IsActive("Account", "GetAllUser", "EditUser", "UserDetails");
+    bool userMenuOpen = createUserActive || allUsersActive;
+
+    // Admin: roles dropdown (add more action names here if you have them)
+    bool allRolesActive = IsActive("Account", "GetAllRoles", "CreateRole", "EditRole");
+    bool roleMenuOpen = allRolesActive;
+
+    // My workspace
+    bool myProfileActive = IsActive("Account", "Index");
+    bool myInfoActive = IsActive("Employee", "MyInfo");
+    bool applyLeaveActive = IsActive("Leave", "Apply");
+    bool myLeaveActive = IsActive("Leave", "MyRequests");
+    bool myLeaveMenuOpen = applyLeaveActive || myLeaveActive;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StaffManagement</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+          <link rel="stylesheet"
+      href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" />
+</head>
+
+<body class="dashboard-body">
+    <div class="dashboard-shell">
+
+        <aside class="sidebar">
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="brand">
+                <span class="brand-icon">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                </span>
+                <span>StaffManagement</span>
+            </a>
+
+            <nav class="sidebar-nav">
+
+                <!-- ============ WORKSPACE ============ -->
+                <div class="sidebar-label">WORKSPACE</div>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="sidebar-link @(dashboardActive ? "active" : "")">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- ============ LEAVE MANAGEMENT (HR / Admin) ============ -->
+                @if (isHR || isAdmin || isManager)
+                {
+                    <div class="sidebar-label">LEAVE MANAGEMENT</div>
+
+                    <a asp-controller="Leave"
+                       asp-action="Index"
+                       class="sidebar-link @(leaveRequestsActive ? "active" : "")">
+                        <i class="bi bi-calendar2-check"></i>
+                        <span>Leave Requests</span>
+
+                        @if (isHR || isManager)
+                        {
+                            <span id="pendingLeaveBadge"
+                                  class="badge bg-danger ms-auto"
+                                  style="display:none;">
+                                0
+                            </span>
+                        }
+                    </a>
+                }
+
+                <!-- ============ EMPLOYEE MANAGEMENT (Admin / HR) ============ -->
+                @if (isAdmin || isHR|| isManager)
+                {
+                    <div class="sidebar-label">EMPLOYEE MANAGEMENT</div>
+
+                    <a class="sidebar-link @(employeeMenuOpen ? "active" : "collapsed")"
+                       data-bs-toggle="collapse"
+                       href="#employeeMenu"
+                       role="button"
+                       aria-expanded="@(employeeMenuOpen ? "true" : "false")"
+                       aria-controls="employeeMenu">
+                        <i class="bi bi-people"></i>
+                        <span>Employees</span>
+                        <i class="bi bi-chevron-down ms-auto sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse sidebar-submenu @(employeeMenuOpen ? "show" : "")"
+                         id="employeeMenu">
+
+                        <a asp-controller="Employee"
+                           asp-action="Index"
+                           class="sidebar-link submenu-link @(manageEmployeesActive ? "active" : "")">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span>Manage Employees</span>
+                        </a>
+
+                    </div>
+                }
+
+                <!-- ============ ADMINISTRATION (Admin) ============ -->
+                @if (isAdmin)
+                {
+                    <div class="sidebar-label">ADMINISTRATION</div>
+
+                    <!-- Manage Users -->
+                    <a class="sidebar-link @(userMenuOpen ? "active" : "collapsed")"
+                       data-bs-toggle="collapse"
+                       href="#userMenu"
+                       role="button"
+                       aria-expanded="@(userMenuOpen ? "true" : "false")"
+                       aria-controls="userMenu">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Manage Users</span>
+                        <i class="bi bi-chevron-down ms-auto sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse sidebar-submenu @(userMenuOpen ? "show" : "")"
+                         id="userMenu">
+
+                        <a asp-controller="Account"
+                           asp-action="Create"
+                           class="sidebar-link submenu-link @(createUserActive ? "active" : "")">
+                            <i class="bi bi-person-plus"></i>
+                            <span>Create User</span>
+                        </a>
+
+                        <a asp-controller="Account"
+                           asp-action="GetAllUser"
+                           class="sidebar-link submenu-link @(allUsersActive ? "active" : "")">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span>View All Users</span>
+                        </a>
+
+                    </div>
+
+                    <!-- Manage Roles -->
+                    <a class="sidebar-link @(roleMenuOpen ? "active" : "collapsed")"
+                       data-bs-toggle="collapse"
+                       href="#roleMenu"
+                       role="button"
+                       aria-expanded="@(roleMenuOpen ? "true" : "false")"
+                       aria-controls="roleMenu">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Manage Roles</span>
+                        <i class="bi bi-chevron-down ms-auto sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse sidebar-submenu @(roleMenuOpen ? "show" : "")"
+                         id="roleMenu">
+
+                        <a asp-controller="Account"
+                           asp-action="GetAllRoles"
+                           class="sidebar-link submenu-link @(allRolesActive ? "active" : "")">
+                            <i class="bi bi-shield-check"></i>
+                            <span>View All Roles</span>
+                        </a>
+
+                    </div>
+                }
+
+                <!-- ============ PROJECT MANAGEMENT (Admin / Manager) ============ -->
+                @if (isAdmin || isManager)
+                {
+                    <div class="sidebar-label">PROJECT MANAGEMENT</div>
+
+                    <a class="sidebar-link @(projectManagementActive ? "active" : "collapsed")"
+                       data-bs-toggle="collapse"
+                       href="#projectMenu"
+                       role="button"
+                       aria-expanded="@(projectManagementActive ? "true" : "false")"
+                       aria-controls="projectMenu">
+                        <i class="bi bi-kanban"></i>
+                        <span>Projects</span>
+                        <i class="bi bi-chevron-down ms-auto sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse sidebar-submenu @(projectManagementActive ? "show" : "")"
+                         id="projectMenu">
+                        <a asp-controller="Project"
+                           asp-action="Index"
+                           class="sidebar-link submenu-link @(IsActive("Project", "Index") ? "active" : "")">
+                            <i class="bi bi-list-ul"></i>
+                            <span>All Projects</span>
+                        </a>
+
+                        <a asp-controller="Project"
+                           asp-action="Create"
+                           class="sidebar-link submenu-link @(IsActive("Project", "Create") ? "active" : "")">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Create Project</span>
+                        </a>
+
+                    </div>
+                }
+
+                <!-- ============ MY WORKSPACE (User / HR) ============ -->
+                @if (isUser || isHR || isManager)
+                {
+                    <div class="sidebar-label">MY WORKSPACE</div>
+
+                    @if (isUser)
+                    {
+                        <a asp-controller="Account"
+                           asp-action="Index"
+                           class="sidebar-link @(myProfileActive ? "active" : "")">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Profile</span>
+                        </a>
+
+                        <a asp-controller="Employee"
+                           asp-action="MyInfo"
+                           class="sidebar-link @(myInfoActive ? "active" : "")">
+                            <i class="bi bi-person-vcard"></i>
+                            <span>My Info</span>
+                        </a>
+                    }
+
+                    <!-- My Leave dropdown -->
+                    <a class="sidebar-link @(myLeaveMenuOpen ? "active" : "collapsed")"
+                       data-bs-toggle="collapse"
+                       href="#myLeaveMenu"
+                       role="button"
+                       aria-expanded="@(myLeaveMenuOpen ? "true" : "false")"
+                       aria-controls="myLeaveMenu">
+                        <i class="bi bi-calendar2-week"></i>
+                        <span>My Leave</span>
+                        <i class="bi bi-chevron-down ms-auto sidebar-chevron"></i>
+                    </a>
+
+                    <div class="collapse sidebar-submenu @(myLeaveMenuOpen ? "show" : "")"
+                         id="myLeaveMenu">
+
+                        <a asp-controller="Leave"
+                           asp-action="Apply"
+                           class="sidebar-link submenu-link @(applyLeaveActive ? "active" : "")">
+                            <i class="bi bi-calendar-plus"></i>
+                            <span>Apply Leave</span>
+                        </a>
+
+                        <a asp-controller="Leave"
+                           asp-action="MyRequests"
+                           class="sidebar-link submenu-link @(myLeaveActive ? "active" : "")">
+                            <i class="bi bi-list-check"></i>
+                            <span>My Leave Requests</span>
+                        </a>
+
+                    </div>
+                }
+
+                <!-- ============ MY ACCOUNT (other authenticated roles) ============ -->
+                @if (isAuthenticated && !isUser)
+                {
+                    <div class="sidebar-label">MY ACCOUNT</div>
+
+                    <a asp-controller="Account"
+                       asp-action="Index"
+                       class="sidebar-link @(myProfileActive ? "active" : "")">
+                        <i class="bi bi-person-circle"></i>
+                        <span>My Profile</span>
+                    </a>
+                }
+
+            </nav>
+
+        </aside>
+
+        <div class="main-area">
+
+            <header class="topbar">
+
+                <div>
+                    <div class="topbar-heading">
+                        @ViewData["Title"]
+                    </div>
+
+                    <div class="topbar-subtitle">
+                        StaffManagement / Workspace
+                    </div>
+                </div>
+
+                <div class="topbar-user">
+
+                    <div class="user-avatar">
+                        @(User.Identity?.Name?.Length > 0
+                            ? User.Identity.Name.Substring(0, 1).ToUpper()
+                            : "U")
+                    </div>
+
+                    <div class="user-details">
+
+                        <span class="user-name">
+                            @User.Identity?.Name
+                        </span>
+
+                        <span class="user-role">
+                            @if (isAdmin)
+                            {
+                                @:Administrator
+                            }
+                            else if (isHR)
+                            {
+                                @:Human Resources
+                            }
+                            else if (isUser)
+                            {
+                                @:Employee
+                            }
+                        </span>
+
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        <!-- Change Password -->
+                        <a asp-controller="Account"
+                           asp-action="ChangePassword"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-key"></i>
+                            Change Password
+                        </a>
+
+                        <!-- Logout (form tag helper adds the anti-forgery token) -->
+                        <form asp-controller="Account"
+                              asp-action="Logout"
+                              method="post">
+                            <button type="submit"
+                                    class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </button>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <main class="content-area">
+                @RenderBody()
+            </main>
+
+            <footer class="dashboard-footer">
+                &copy; @DateTime.Now.Year CodexaManagement
+            </footer>
+
+        </div>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @if (isHR)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", async function () {
+                try {
+                    const response = await fetch(
+                        '@Url.Action("GetPendingLeaveCount", "Leave")'
+                    );
+
+                    if (!response.ok) return;
+
+                    const count = await response.json();
+                    const badge = document.getElementById("pendingLeaveBadge");
+
+                    if (badge && count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = "inline-block";
+                    }
+                }
+                catch (error) {
+                    console.error("Unable to load pending leave count.", error);
+                }
+            });
+        </script>
+    }
+</body>
+</html>

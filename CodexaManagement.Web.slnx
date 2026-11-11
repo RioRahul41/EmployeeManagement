@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CodexaManagement.Core/CodexaManagement.Core.csproj" />
+  <Project Path="CodexaManagement.Data/CodexaManagement.Data.csproj" />
+  <Project Path="CodexaManagement.Model/CodexaManagement.Model.csproj" />
+  <Project Path="CodexaManagement.Web/CodexaManagement.Web.csproj" />
+</Solution>

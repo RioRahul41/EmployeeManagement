@@ -1,0 +1,49 @@
+@model CodexaManagement.Web.Models.ReviewLeaveViewModel
+@{
+    ViewData["Title"] = "Review Leave Request";
+    var isHr = User.IsInRole("HR");
+    var isPending = Model.Status == "Pending";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h2 class="fw-bold mb-1">Leave Request</h2><p class="text-muted mb-0">Review request details and supporting proof.</p></div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to requests</a>
+</div>
+@if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="row g-4">
+            <div class="col-md-6"><div class="text-muted small">Employee</div><div class="fw-semibold">@Model.EmployeeName</div><div>@Model.EmployeeEmail</div></div>
+            <div class="col-md-3"><div class="text-muted small">Request status</div><div class="fw-semibold">@Model.Status</div></div>
+            <div class="col-md-3"><div class="text-muted small">Leave type</div><div class="fw-semibold">@Model.LeaveType</div></div>
+            <div class="col-md-6"><div class="text-muted small">Dates</div><div>@Model.StartDate.ToString("d MMM yyyy") – @Model.EndDate.ToString("d MMM yyyy") (@Model.WorkingDays working days)</div></div>
+            <div class="col-12"><div class="text-muted small">Reason</div><div class="white-space-pre-wrap">@Model.Reason</div></div>
+            <div class="col-12"><div class="text-muted small">Proof document</div>@if (Model.ProofFileName != null) { <a asp-controller="Leave"
+   asp-action="Proof"
+   asp-route-id="@Model.Id"
+   target="_blank"
+   rel="noopener noreferrer">
+    View Proof Document
+</a> } else { <span>No proof uploaded</span> }</div>
+            @if (!string.IsNullOrWhiteSpace(Model.ReviewNote)) { <div class="col-12"><div class="text-muted small">Previous HR comment</div><div>@Model.ReviewNote</div></div> }
+        </div>
+    </div>
+</div>
+
+@if (isHr && isPending)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <div class="col-12"><label asp-for="ReviewComment" class="form-label"></label><textarea asp-for="ReviewComment" class="form-control" rows="3" maxlength="1000" placeholder="Optional for approval; required to reject"></textarea></div>
+                <div class="col-12 d-flex gap-2">
+                    <button asp-action="Approve" type="submit" class="btn btn-success">Approve request</button>
+                    <button asp-action="Reject" type="submit" class="btn btn-outline-danger" onclick="return document.getElementById('ReviewComment').value.trim().length > 0 || (alert('Add a reason before rejecting.'), false);">Reject request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
